@@ -1,49 +1,63 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
+  const [format, setFormat] = useState("mp3");
+  const [output, setOutput] = useState("");
+  const [status, setStatus] = useState("");
+  const [progress, setProgress] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  async function convert() {
+    setStatus("Starting conversion...");
+    try {
+      const result = await invoke("convert", { url, format });
+      setOutput(result);
+      setStatus("Done");
+    } catch (e) {
+      setStatus("Error: " + e);
+    }
   }
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
+      <h1>YouTube MP4 & MP3 Converter</h1>
+      <div className="row" style={{ flexDirection: "column", gap: 12, alignItems: "center" }}>
         <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.currentTarget.value)}
+          placeholder="Enter YouTube URL..."
+          style={{ width: "80%" }}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+        <div className="row" style={{ gap: 8 }}>
+          <label>
+            <input
+              type="radio"
+              value="mp3"
+              checked={format === "mp3"}
+              onChange={() => setFormat("mp3")}
+            />
+            MP3
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="mp4"
+              checked={format === "mp4"}
+              onChange={() => setFormat("mp4")}
+            />
+            MP4
+          </label>
+        </div>
+        <button onClick={convert} disabled={!url}>
+          Convert
+        </button>
+        {status && <p>{status}</p>}
+        {progress && <p>{progress}</p>}
+        {output && <p>Saved to: {output}</p>}
+      </div>
     </main>
   );
 }
